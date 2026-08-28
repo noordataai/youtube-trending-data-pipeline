@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListSilverBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::yt-pipeline-silver-ap-south-1-dev"
+    },
+    {
+      "Sid": "AllowReadWriteSilverObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::yt-pipeline-silver-ap-south-1-dev/*"
+    },
+    {
+      "Sid": "AllowGlueCatalogAccessForAWSWrangler",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateDatabase",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:CreateTable",
+        "glue:UpdateTable",
+        "glue:BatchCreatePartition",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchGetPartition",
+        "glue:CreatePartition",
+        "glue:UpdatePartition",
+        "glue:BatchDeletePartition",
+        "glue:DeleteTable"
+      ],
+      "Resource": [
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:catalog",
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:database/yt_pipeline_silver_dev",
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:table/yt_pipeline_silver_dev/*"
+      ]
+    }
+  ]
+}
