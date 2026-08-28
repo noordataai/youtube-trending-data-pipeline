@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Packaging artifacts
+*.zip
+
+# Local data (never commit datasets — see README > Data Sources)
+data/
+*.csv
+*.parquet
+
+# AWS / secrets
+.aws-sam/
+*.pem
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
