@@ -1,0 +1,61 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAthenaQueryExecution",
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:StopQueryExecution",
+        "athena:GetWorkGroup"
+      ],
+      "Resource": "arn:aws:athena:ap-south-1:<AWS_ACCOUNT_ID>:workgroup/primary"
+    },
+    {
+      "Sid": "AllowGlueCatalogReadForAthena",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchGetPartition"
+      ],
+      "Resource": [
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:catalog",
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:database/yt_pipeline_silver_dev",
+        "arn:aws:glue:ap-south-1:<AWS_ACCOUNT_ID>:table/yt_pipeline_silver_dev/*"
+      ]
+    },
+    {
+      "Sid": "AllowReadSilverDataForAthena",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::yt-pipeline-silver-ap-south-1-dev",
+        "arn:aws:s3:::yt-pipeline-silver-ap-south-1-dev/*"
+      ]
+    },
+    {
+      "Sid": "AllowAthenaQueryResultsBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::yt-pipeline-athena-query-results-dev",
+        "arn:aws:s3:::yt-pipeline-athena-query-results-dev/*"
+      ]
+    }
+  ]
+}
