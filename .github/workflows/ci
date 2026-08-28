@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lint tools
+        run: pip install flake8 black
+
+      - name: Lint with flake8
+        run: flake8 lambdas glue_jobs scripts --max-line-length=120 --extend-ignore=E203
+
+      - name: Check formatting with black
+        run: black --check lambdas glue_jobs scripts
+
+  validate-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Step Functions definition
+        run: python -m json.tool step_functions/pipeline_orchestration.json > /dev/null
+
+      - name: Validate IAM policy JSON
+        run: |
+          for f in infrastructure/iam/*.json infrastructure/iam/lambda_role/*.json; do
+            echo "Checking $f"
+            python -m json.tool "$f" > /dev/null
+          done
