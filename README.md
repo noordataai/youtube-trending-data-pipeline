@@ -4,6 +4,37 @@ A cloud-native ETL pipeline that ingests YouTube trending video data across 10 r
 
 ![Architecture Diagram](YouTube%20Trending%20Data%20Pipeline.png)
 
+# YouTube Trending Data Pipeline
+
+[![CI](https://github.com/noordataai/youtube-trending-data-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/noordataai/youtube-trending-data-pipeline/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+A serverless AWS ETL pipeline that ingests YouTube trending video data across
+**10 regions** from the live YouTube Data API v3, transforms it through a
+**Bronze → Silver → Gold** medallion architecture, enforces a **data quality
+gate** before publishing, and produces analytics-ready aggregations —
+orchestrated end-to-end by **AWS Step Functions**.
+
+![Architecture Diagram](docs/architecture-diagram.png)
+
+## Highlights
+
+- **Live data, not a static CSV dump** — replaces manual Kaggle downloads
+  with scheduled YouTube Data API v3 ingestion across 10 regions, while
+  still supporting the original Kaggle dataset format for backfill.
+- **A data quality gate that actually blocks bad data** — Gold aggregation
+  does not run if Silver data fails row-count, null%, schema, value-range,
+  or freshness checks. Failures page out via SNS instead of silently
+  producing wrong numbers.
+- **A real production bug, found and fixed** — an early version of the
+  ingestion Lambda split S3 partitions across `region=GB/` and `region=gb/`
+  due to a casing bug, silently under-counting affected regions in Gold.
+  See [`docs/engineering-decisions.md`](docs/engineering-decisions.md) for
+  the root cause and the idempotent remediation script that cleaned it up.
+- **Orchestrated, not just scripted** — AWS Step Functions coordinates the
+  full pipeline with retries, parallel branches, and failure notifications,
+  triggered on a schedule via EventBridge.
+
 ---
 
 ## Table of Contents
@@ -118,7 +149,10 @@ youtube-data-pipeline-2026/
 │
 └── YouTube Trending Data Pipeline.png # Architecture diagram
 ```
-
+> **Note on IAM policies:** the JSON files under `infrastructure/iam/` are
+> real policies used in this project, with the AWS account ID replaced by
+> `<AWS_ACCOUNT_ID>` and bucket names normalized. Swap in your own account
+> ID and bucket names before applying them.
 ---
 
 ## Data Flow
@@ -287,6 +321,15 @@ aws sns subscribe --topic-arn <topic-arn> --protocol email --notification-endpoi
 | `DQ_MIN_ROW_COUNT`      | Minimum row count threshold    | `10`    |
 | `DQ_MAX_NULL_PERCENT`   | Maximum null percentage allowed| `5.0`   |
 
+**Reference Data Lambda**
+
+| Variable                | Description                | Default                  |
+|---------------------------|--------------------------------|------------------------------|
+| `S3_BUCKET_SILVER`        | Target bucket for cleansed data | —                       |
+| `GLUE_DB_SILVER`          | Glue catalog database name | `yt_pipeline_silver_dev`    |
+| `GLUE_TABLE_REFERENCE`    | Glue catalog table name    | `clean_reference_data`      |
+| `SNS_ALERT_TOPIC_ARN`     | SNS topic for alerts (optional) | —                       |
+
 #### Glue Jobs
 
 Glue job parameters are passed via the Step Functions state machine or directly via `--arguments`:
@@ -438,5 +481,24 @@ LIMIT 10;
 
 ## Data Sources
 
-- **YouTube Data API v3** — live trending video data (primary)
-- **Kaggle YouTube Trending Dataset** — historical data for backfill and testing
+- **YouTube Data API v3** — live trending video data (primary source)
+- **[Kaggle: Trending YouTube Video Statistics](https://www.kaggle.com/datasets/datasnaek/youtube-new)**
+  — optional historical dataset used for backfill/testing. This dataset is
+  **not included in this repository** (it's ~500MB across 10 regions and
+  belongs to its original Kaggle source) — download it yourself and use
+  `scripts/upload_historical_data.sh` if you want to seed Bronze with it.
+
+---
+
+## Engineering Decisions
+
+For the reasoning behind the medallion layering, the hard data-quality gate,
+dual-format schema handling, and a real production bug this pipeline hit
+(mixed-case S3 partitions) and how it was fixed, see
+[`docs/engineering-decisions.md`](docs/engineering-decisions.md).
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
